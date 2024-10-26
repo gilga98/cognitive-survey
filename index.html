@@ -207,19 +207,50 @@
             </div>
         </div>
 
+        <!-- Sudoku Instructions Modal -->
+        <div class="modal fade" id="instructionsModal" tabindex="-1" aria-labelledby="instructionsModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title" id="instructionsModalLabel">Sudoku Instructions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                <p>Welcome to the Sudoku Challenge! Here’s how to play:</p>
+                <ul>
+                    <li>The Sudoku puzzle is a 9x9 grid, divided into 3x3 subgrids.</li>
+                    <li>Each row, column, and 3x3 subgrid must contain the numbers 1 through 9 without repeating.</li>
+                    <li>Some cells are pre-filled; use these as clues to complete the puzzle.</li>
+                    <li>Enter your solution in the empty cells by clicking and typing a number between 1 and 9.</li>
+                    <li>When you’re finished, submit your solution to check if it’s correct.</li>
+                </ul>
+                <p>Good luck, and enjoy the puzzle!</p>
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+            </div>
+        </div>
+        
+
 
         <!-- Puzzle Section -->
         <div id="puzzleSection" class="card mb-4" style="display: none;">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="card-title mb-0">Solve the Sudoku Puzzle</h3>
-                    <div>
+                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#instructionsModal">
+                        View Instructions
+                    </button>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
                         <span id="timer">00:00</span>
                         <span class="hint-count ms-3">Hints: <span id="hintCount">3</span> remaining</span>
-                    </div>
                 </div>
+               
                 <div class="sudoku-grid" id="sudokuGrid"></div>
-                <div class="mt-4 text-center">
+                <div class="d-flex justify-content-between mt-4 text-center">
                     <button id="hintButton" class="btn btn-outline-primary">Get Hint</button>
                     <button id="submitPuzzle" class="btn btn-primary ms-2">Submit Solution</button>
                     <button id="giveUp" class="btn btn-secondary ms-2">Give Up</button>
