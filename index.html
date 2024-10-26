@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cognitive Load Experiment</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Add Bootstrap Icons for help tooltips -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    
+    <style>
+        .help-icon {
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 0.5rem;
+        }
+
+        .music-banner {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 1px;
+            background: #ccc;
+            padding: 2px;
+            max-width: 450px;
+            margin: 0 auto;
+        }
+        .sudoku-cell {
+            width: 100%;
+            aspect-ratio: 1;
+            background: white;
+            border: none;
+            text-align: center;
+            font-size: 1.2em;
+            transition: background-color 0.2s;
+        }
+        .sudoku-cell:nth-child(n+1):nth-child(-n+9):nth-child(3n),
+        .sudoku-cell:nth-child(n+10):nth-child(-n+18):nth-child(3n),
+        .sudoku-cell:nth-child(n+19):nth-child(-n+27):nth-child(3n),
+        .sudoku-cell:nth-child(n+28):nth-child(-n+36):nth-child(3n),
+        .sudoku-cell:nth-child(n+37):nth-child(-n+45):nth-child(3n),
+        .sudoku-cell:nth-child(n+46):nth-child(-n+54):nth-child(3n),
+        .sudoku-cell:nth-child(n+55):nth-child(-n+63):nth-child(3n),
+        .sudoku-cell:nth-child(n+64):nth-child(-n+72):nth-child(3n),
+        .sudoku-cell:nth-child(n+73):nth-child(-n+81):nth-child(3n) {
+            border-right: 2px solid #666;
+        }
+        .sudoku-cell:nth-child(n+19):nth-child(-n+27),
+        .sudoku-cell:nth-child(n+46):nth-child(-n+54) {
+            border-bottom: 2px solid #666;
+        }
+        .fixed {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+        .selected {
+            background: #e3f2fd !important;
+        }
+        .related {
+            background: #f8f9fa;
+        }
+        .invalid {
+            background: #ffebee !important;
+        }
+        .valid-input {
+            background: #f1f8e9;
+        }
+        #timer {
+            font-family: monospace;
+            font-size: 1.5em;
+        }
+        .hint-count {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .stats {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <!-- Progress Steps -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="progress">
+                    <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Music Banner -->
+        <div id="musicBanner" class="music-banner">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>🎵 Background Music Enabled</strong>
+                    <p>Please ensure you have headphones ready for the best experience. </p>
+                    <p class="mb-0" > The music will play at 50% volume by default.</p>
+                </div>
+                <div>
+                    <button id="toggleMusic" class="btn btn-outline-primary btn-sm">
+                        Disable Music
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Survey Section -->
+        <div id="surveySection" class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Cognitive Load Experiment</h2>
+                <form id="userForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label d-flex align-items-center">
+                                Age Group
+                                <i class="bi bi-question-circle help-icon" 
+                                   data-bs-toggle="tooltip" 
+                                   title="Please select your age range for demographic analysis"></i>
+                            </label>
+                            <select class="form-select" name="ageGroup" required>
+                                <option value="">Select age group</option>
+                                <option value="18-24">18-24</option>
+                                <option value="25-34">25-34</option>
+                                <option value="35-44">35-44</option>
+                                <option value="45-54">45-54</option>
+                                <option value="55+">55+</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label d-flex align-items-center">
+                                Gender
+                                <i class="bi bi-question-circle help-icon" 
+                                   data-bs-toggle="tooltip" 
+                                   title="Select your gender identity for demographic analysis"></i>
+                            </label>
+                            <select class="form-select" name="gender" required>
+                                <option value="">Select gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                                <option value="prefer-not-to-say">Prefer not to say</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label d-flex align-items-center">
+                                Education Level
+                                <i class="bi bi-question-circle help-icon" 
+                                   data-bs-toggle="tooltip" 
+                                   title="Select your highest completed level of education"></i>
+                            </label>
+                            <select class="form-select" name="education" required>
+                                <option value="">Select education level</option>
+                                <option value="high-school">High School</option>
+                                <option value="bachelors">Bachelor's Degree</option>
+                                <option value="masters">Master's Degree</option>
+                                <option value="phd">Ph.D.</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label d-flex align-items-center">
+                                Current Environment
+                                <i class="bi bi-question-circle help-icon" 
+                                   data-bs-toggle="tooltip" 
+                                   title="Describe your current surroundings while taking this test"></i>
+                            </label>
+                            <select class="form-select" name="environment" required>
+                                <option value="">Select environment</option>
+                                <option value="quiet-room">Quiet Room</option>
+                                <option value="shared-space">Shared Space</option>
+                                <option value="public-place">Public Place</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label d-flex align-items-center">
+                                Puzzle Solving Frequency
+                                <i class="bi bi-question-circle help-icon" 
+                                   data-bs-toggle="tooltip" 
+                                   title="How often do you solve puzzles like Sudoku?"></i>
+                            </label>
+                            <select class="form-select" name="puzzleFrequency" required>
+                                <option value="">Select frequency</option>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="rarely">Rarely</option>
+                                <option value="never">Never</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">Start Experiment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- Puzzle Section -->
+        <div id="puzzleSection" class="card mb-4" style="display: none;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="card-title mb-0">Solve the Sudoku Puzzle</h3>
+                    <div>
+                        <span id="timer">00:00</span>
+                        <span class="hint-count ms-3">Hints: <span id="hintCount">3</span> remaining</span>
+                    </div>
+                </div>
+                <div class="sudoku-grid" id="sudokuGrid"></div>
+                <div class="mt-4 text-center">
+                    <button id="hintButton" class="btn btn-outline-primary">Get Hint</button>
+                    <button id="submitPuzzle" class="btn btn-primary ms-2">Submit Solution</button>
+                    <button id="giveUp" class="btn btn-secondary ms-2">Give Up</button>
+                </div>
+                <div class="stats text-center">
+                    <span id="filledCells">0/81</span> cells filled | 
+                    <span id="conflicts">0</span> conflicts
+                </div>
+            </div>
+        </div>
+
+        <!-- Thank You Section -->
+        <div id="thankYouSection" class="card" style="display: none;">
+            <div class="card-body text-center">
+                <h2 class="card-title">Thank You!</h2>
+                <p class="card-text">Your participation helps us understand the relationship between music and cognitive load.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Adding a fixed footer with padding -->
+    <footer class="footer bg-dark text-center text-light py-3">
+        <div class="container">
+                    <p>Music by Vincent Rubinetti</p>
+                    <p>Download the music on Bandcamp: <a href="https://vincerubinetti.bandcamp.com/album/the-music-of-3blue1brown">https://vincerubinetti.bandcamp.com/album/the-music-of-3blue1brown</a></p>
+                    <p>Stream the music on Spotify: <a href="https://open.spotify.com/playlist/3zNK20qC96mVSww60lVi1k">https://open.spotify.com/playlist/3zNK20qC96mVSww60lVi1k</a></p>
+        </div>
+    </footer>
+
+    
+
+    <!-- Add Bootstrap JS and Popper.js for tooltips -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    
+
+    <script>
+
+        // Device detection
+        function detectDevice() {
+            const ua = navigator.userAgent;
+            if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+                return 'tablet';
+            }
+            if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+                return 'mobile';
+            }
+            return 'desktop';
+        }
+
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+        // Music control
+        let musicEnabled = false;
+        let audioElement = null;
+
+        function toggleMusic() {
+            if (musicEnabled) {
+                if (audioElement) {
+                    audioElement.pause();
+                }
+                document.getElementById('toggleMusic').textContent = 'Enable Music';
+                document.getElementById('musicBanner').style.display = 'none';
+                
+                if(experimentData.startTime){
+                experimentData.musicDisabledTime = new Date();
+                experimentData.musicDuration = Math.floor(
+                    (experimentData.musicDisabledTime - experimentData.startTime ) / 1000
+                );
+                }
+                else{
+                    experimentData.musicDuration = 0;
+                }
+            } else {
+                if (audioElement) {
+                    audioElement.play();
+                }
+                document.getElementById('toggleMusic').textContent = 'Disable Music';
+                experimentData.musicDisabledTime = null;
+            }
+            musicEnabled = !musicEnabled;
+            experimentData.musicEnabled = musicEnabled;
+        }
+
+        document.getElementById('toggleMusic').addEventListener('click', toggleMusic);
+
+
+         // Timer functionality
+         let timerInterval;
+        let seconds = 0;
+        
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                seconds++;
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                document.getElementById('timer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // Predefined medium difficulty Sudoku puzzle
+        const MEDIUM_PUZZLE = [
+            5,3,0,0,7,0,0,0,0,
+            6,0,0,1,9,5,0,0,0,
+            0,9,8,0,0,0,0,6,0,
+            8,0,0,0,6,0,0,0,3,
+            4,0,0,8,0,3,0,0,1,
+            7,0,0,0,2,0,0,0,6,
+            0,6,0,0,0,0,2,8,0,
+            0,0,0,4,1,9,0,0,5,
+            0,0,0,0,8,0,0,7,9
+        ];
+
+        const SOLUTION = [
+            5,3,4,6,7,8,9,1,2,
+            6,7,2,1,9,5,3,4,8,
+            1,9,8,3,4,2,5,6,7,
+            8,5,9,7,6,1,4,2,3,
+            4,2,6,8,5,3,7,9,1,
+            7,1,3,9,2,4,8,5,6,
+            9,6,1,5,3,7,2,8,4,
+            2,8,7,4,1,9,6,3,5,
+            3,4,5,2,8,6,1,7,9
+        ];
+
+        // Modify the experiment data structure
+        let experimentData = {
+            startTime: null,
+            endTime: null,
+            withMusic: false,
+            musicEnabled: false,
+            musicDuration: null,
+            interactionCount: 0,
+            hintsUsed: 0,
+            success: false,
+            conflicts: 0,
+            deviceType: detectDevice()
+        };
+
+        let selectedCell = null;
+        let hintsRemaining = 3;
+
+        // Timer functionality remains the same
+
+        // Create Sudoku grid
+        function createSudokuGrid() {
+            const grid = document.getElementById('sudokuGrid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 81; i++) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'sudoku-cell';
+                input.min = 1;
+                input.max = 9;
+                
+                if (MEDIUM_PUZZLE[i] !== 0) {
+                    input.value = MEDIUM_PUZZLE[i];
+                    input.readOnly = true;
+                    input.classList.add('fixed');
+                }
+
+                input.addEventListener('focus', () => highlightRelatedCells(i));
+                input.addEventListener('blur', () => removeHighlights());
+                input.addEventListener('input', (e) => handleInput(e, i));
+
+                grid.appendChild(input);
+            }
+            updateStats();
+        }
+
+        function highlightRelatedCells(index) {
+            selectedCell = index;
+            const row = Math.floor(index / 9);
+            const col = index % 9;
+            const box = Math.floor(row / 3) * 3 + Math.floor(col / 3);
+            const cells = document.querySelectorAll('.sudoku-cell');
+            
+            cells.forEach((cell, i) => {
+                cell.classList.remove('selected', 'related');
+                const cellRow = Math.floor(i / 9);
+                const cellCol = i % 9;
+                const cellBox = Math.floor(cellRow / 3) * 3 + Math.floor(cellCol / 3);
+                
+                if (i === index) {
+                    cell.classList.add('selected');
+                } else if (cellRow === row || cellCol === col || cellBox === box) {
+                    cell.classList.add('related');
+                }
+            });
+        }
+
+        function removeHighlights() {
+            selectedCell = null;
+            document.querySelectorAll('.sudoku-cell').forEach(cell => {
+                cell.classList.remove('selected', 'related');
+            });
+        }
+
+        function handleInput(e, index) {
+            const input = e.target;
+            const value = input.value;
+
+            experimentData.interactionCount++;
+
+            if (value.length > 1) {
+                input.value = value.slice(-1);
+            }
+
+            if (value !== '' && (value < 1 || value > 9)) {
+                input.value = '';
+            }
+
+            validateCell(index);
+            updateStats();
+        }
+
+        function validateCell(index) {
+            const cells = document.querySelectorAll('.sudoku-cell');
+            const value = cells[index].value;
+            
+            if (!value) return;
+
+            const row = Math.floor(index / 9);
+            const col = index % 9;
+            let isValid = true;
+
+            // Check row
+            for (let i = 0; i < 9; i++) {
+                const cellIndex = row * 9 + i;
+                if (cellIndex !== index && cells[cellIndex].value === value) {
+                    isValid = false;
+                    break;
+                }
+            }
+
+            // Check column
+            for (let i = 0; i < 9; i++) {
+                const cellIndex = i * 9 + col;
+                if (cellIndex !== index && cells[cellIndex].value === value) {
+                    isValid = false;
+                    break;
+                }
+            }
+
+            // Check box
+            const boxRow = Math.floor(row / 3) * 3;
+            const boxCol = Math.floor(col / 3) * 3;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    const cellIndex = (boxRow + i) * 9 + (boxCol + j);
+                    if (cellIndex !== index && cells[cellIndex].value === value) {
+                        isValid = false;
+                        break;
+                    }
+                }
+            }
+
+            cells[index].classList.remove('invalid', 'valid-input');
+            cells[index].classList.add(isValid ? 'valid-input' : 'invalid');
+
+            if (!isValid) {
+                experimentData.conflicts++;
+            }
+        }
+
+        function updateStats() {
+            const cells = document.querySelectorAll('.sudoku-cell');
+            const filledCount = Array.from(cells).filter(cell => cell.value !== '').length;
+            const conflictCount = Array.from(cells).filter(cell => cell.classList.contains('invalid')).length;
+
+            document.getElementById('filledCells').textContent = `${filledCount}/81`;
+            document.getElementById('conflicts').textContent = conflictCount;
+        }
+
+        function getHint() {
+            if (hintsRemaining <= 0) return;
+
+            const cells = document.querySelectorAll('.sudoku-cell');
+            const emptyIndices = Array.from(cells)
+                .map((cell, index) => ({ cell, index }))
+                .filter(({ cell }) => !cell.value && !cell.readOnly);
+
+            if (emptyIndices.length > 0) {
+                const randomEmpty = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+                randomEmpty.cell.value = SOLUTION[randomEmpty.index];
+                randomEmpty.cell.classList.add('fixed');
+                randomEmpty.cell.readOnly = true;
+                
+                hintsRemaining--;
+                experimentData.hintsUsed++;
+                document.getElementById('hintCount').textContent = hintsRemaining;
+                validateCell(randomEmpty.index);
+                updateStats();
+            }
+        }
+
+        experimentData.withMusic = Math.random() < 0.5;
+        
+        if(experimentData.withMusic){
+            document.getElementById('musicBanner').style.display = 'block';
+            musicEnabled = true;
+        }
+
+        // Modify form submission handling
+        document.getElementById('userForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            experimentData = {
+                ...experimentData,
+                ...Object.fromEntries(formData),
+                deviceType: detectDevice(),
+            };
+
+            document.getElementById('surveySection').style.display = 'none';
+            document.getElementById('puzzleSection').style.display = 'block';
+            document.getElementById('progressBar').style.width = '50%';
+
+            if (experimentData.withMusic) {
+                experimentData.musicEnabled = true;
+                // Randomly select music
+
+                audioElement = new Audio(Math.random() < 0.5 ? 'Vincent Rubinetti - The Music of 3Blue1Brown - 01 Heartbeat.mp3' : 'Vincent Rubinetti - The Music of 3Blue1Brown - 01 Zeta.mp3');
+                audioElement.volume = 0.5;
+
+                audioElement.loop = true;
+                audioElement.play();
+            }
+
+            createSudokuGrid();
+            experimentData.startTime = new Date();
+            startTimer();
+        });
+
+        // Submit puzzle handling
+        document.getElementById('submitPuzzle').addEventListener('click', () => {
+            const cells = document.querySelectorAll('.sudoku-cell');
+            const currentState = Array.from(cells).map(cell => parseInt(cell.value) || 0);
+            const isComplete = currentState.every(val => val !== 0);
+            const isCorrect = currentState.every((val, index) => val === SOLUTION[index]);
+
+            experimentData.endTime = new Date();
+            experimentData.duration = Math.floor((experimentData.endTime - experimentData.startTime) / 1000);
+            experimentData.success = isComplete && isCorrect;
+            
+            clearInterval(timerInterval);
+            finishExperiment(experimentData.success);
+        });
+
+        // Give up handling
+        document.getElementById('giveUp').addEventListener('click', () => {
+            experimentData.endTime = new Date();
+            experimentData.duration = Math.floor((experimentData.endTime - experimentData.startTime) / 1000);
+            clearInterval(timerInterval);
+            finishExperiment(false);
+        });
+
+        // Hint button handling
+        document.getElementById('hintButton').addEventListener('click', getHint);
+
+        function submitToGoogleForm(data) {
+            const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSeB2WMkvK7nDZllnLh2d2MigpbioPOZmQ2TG92yJ28YtIPiFg/formResponse';
+            const formData = new FormData();
+            
+            // Map your data to Google Form field names
+            formData.append('entry.186683135', data.ageGroup);
+            formData.append('entry.381161637', data.gender);
+            formData.append('entry.1248137701', data.education);
+            formData.append('entry.768997891', data.environment);
+            formData.append('entry.266854097', data.puzzleFrequency);
+            formData.append('entry.1357388550', data.duration);
+            formData.append('entry.505582161', data.musicEnabled);
+            formData.append('entry.219636265', data.musicDuration);
+            formData.append('entry.154081588', data.interactionCount);
+            formData.append('entry.152242139', data.hintsUsed);
+            formData.append('entry.746502835', data.conflicts);
+            formData.append('entry.999552759', data.deviceType);
+            // ... add other fields ...
+            
+            fetch(formUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: formData
+            });
+        }
+
+        // Modify finish experiment to include music data
+        function finishExperiment(completed) {
+            const finalData = {
+                ...experimentData,
+                completed,
+                timeSpent: experimentData.duration,
+                hintsUsed: experimentData.hintsUsed,
+                deviceType: detectDevice(),
+                musicEnabled: musicEnabled,
+                musicDuration: experimentData.musicDuration,
+                timestamp: new Date().toISOString()
+            };
+
+            console.log('Data to submit:', finalData);
+            submitToGoogleForm(finalData);
+
+            document.getElementById('puzzleSection').style.display = 'none';
+            document.getElementById('thankYouSection').style.display = 'block';
+            document.getElementById('progressBar').style.width = '100%';
+
+            if (audioElement) {
+                audioElement.pause();
+            }
+        }
+    </script>
+</body>
+</html>
